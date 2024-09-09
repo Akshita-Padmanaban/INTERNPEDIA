@@ -1,0 +1,66 @@
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, accuracy_score
+
+# Load data
+data = pd.read_csv('titanic.csv')
+
+# Display first few rows of the dataset
+print(data.head())
+
+# Data Preprocessing
+# Drop columns that won't be used
+data = data.drop(['Name', 'Ticket', 'Cabin'], axis=1)
+
+# Handle missing values
+data['Age'].fillna(data['Age'].median(), inplace=True)
+data['Embarked'].fillna(data['Embarked'].mode()[0], inplace=True)
+
+# Encode categorical variables
+label_encoder = LabelEncoder()
+data['Sex'] = label_encoder.fit_transform(data['Sex'])
+data['Embarked'] = label_encoder.fit_transform(data['Embarked'])
+
+# Define features and target variable
+X = data[['Pclass', 'Sex', 'Age', 'SibSp', 'Parch', 'Fare', 'Embarked']]
+y = data['Survived']
+
+# Split the data into training and test sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Feature scaling (standardize features)
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Initialize and train the model
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+# Make predictions
+y_pred = model.predict(X_test)
+
+# Evaluate the model
+print("Accuracy Score:", accuracy_score(y_test, y_pred))
+print("Classification Report:\n", classification_report(y_test, y_pred))
+
+# Data Visualization
+plt.figure(figsize=(12, 6))
+sns.countplot(data=data, x='Survived', palette='Set1')
+plt.title('Survival Counts')
+plt.show()
+
+plt.figure(figsize=(12, 6))
+sns.histplot(data=data, x='Age', hue='Survived', multiple='stack', bins=30, palette='Set1')
+plt.title('Age Distribution by Survival')
+plt.show()
+
+plt.figure(figsize=(12, 6))
+sns.boxplot(data=data, x='Survived', y='Fare', palette='Set1')
+plt.title('Fare Distribution by Survival')
+plt.show()
